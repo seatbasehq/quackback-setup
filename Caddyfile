@@ -1,0 +1,26 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy app:3000 {
+		# Don't buffer streaming responses (SSE / live updates)
+		flush_interval -1
+		health_uri /api/health/ready
+		health_interval 30s
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Allow reasonably large uploads (attachments/images)
+	request_body {
+		max_size 25MB
+	}
+}
